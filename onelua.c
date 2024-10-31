@@ -107,6 +107,7 @@
 #include "lstrlib.c"
 #include "ltablib.c"
 #include "lutf8lib.c"
+#include "lhelperlib.c"
 #include "linit.c"
 #endif
 
