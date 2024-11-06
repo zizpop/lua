@@ -1,0 +1,25 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-debug",
+			"type": "shell",
+			"command": "task",
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"osx": {
+				"args": [
+					"native-build-macos-debug"
+				]
+			},
+			"linux": {
+				"args": [
+					"native-build-linux-debug"
+				]
+			}
+		}
+	]
+}
