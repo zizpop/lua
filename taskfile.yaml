@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://json.schemastore.org/taskfile.json
+version: "3"
+
+tasks:
+  mkdir-build-windows: powershell -NoProfile -Command "mkdir -Force build"
+  mkdir-build-linux: mkdir -p build
+  mkdir-build-darwin: mkdir -p build
+  mkdir-build: { deps: ["mkdir-build-{{OS}}"] }
+
+  default:
+    deps: [distribution]
+
+  native-build-macos-debug:
+    deps: [mkdir-build]
+    cmd: clang -g  -o build/lua-dbg onelua.c
+  native-build-macos-release:
+    deps: [mkdir-build]
+    cmd: clang -Os -o build/lua onelua.c
+
+  native-build-linux-debug:
+    deps: [mkdir-build]
+    cmd: gcc -g  -o build/lua-dbg onelua.c
+  native-build-linux-release:
+    deps: [mkdir-build]
+    cmd: gcc -Os -o build/lua onelua.c
+
+  native-build-windows-debug:
+    deps: [mkdir-build]
+    cmd: cl /nologo /Zi /DEBUG /Fe:lua.exe onelua.c
+  native-build-windows-release:
+    deps: [mkdir-build]
+    cmd: cl /nologo /O2 /Fe:lua.exe onelua.c
+
+  zig-build-debug:
+    deps: [mkdir-build]
+    cmd: zig cc -g  -o build/lua-zig-dbg onelua.c
+  zig-build-release:
+    deps: [mkdir-build]
+    cmd: zig cc -Os -o build/lua-zig     onelua.c
+
+  cross-build-win:
+    deps: [mkdir-build]
+    cmd: zig cc -DLUA_USE_WINDOWS --target=x86_64-windows-gnu -Os -o build/lua-win-x64 onelua.c
+  cross-build-macos:
+    deps: [mkdir-build]
+    cmds:
+      - zig cc -DLUA_USE_MACOSX  --target=aarch64-macos -Os -o build/lua-macos-arm64 onelua.c
+      - zig cc -DLUA_USE_MACOSX  --target=x86_64-macos  -Os -o build/lua-macos-x64 onelua.c
+  cross-build-linux:
+    deps: [mkdir-build]
+    cmd: zig cc -DLUA_USE_LINUX   --target=x86_64-linux-musl  -Os -o build/lua-linux-x64 onelua.c
+
+  distribution:
+    desc: 用于构建profilehub项目使用的lua程序
+    deps: ["cross-build-win", "cross-build-linux", "cross-build-macos"]
+
+  # 如下是测试任务
+  test-build-var-zig:
+    deps: [mkdir-build]
+    cmds:
+      - zig cc     -o build/lua-zig-raw onelua.c
+      - zig cc -Os -o build/lua-zig-Os  onelua.c
+      - zig cc -O2 -o build/lua-zig-O2  onelua.c
+      - zig cc -O3 -o build/lua-zig-O3  onelua.c
+  test-build-var-macos:
+    deps: [mkdir-build]
+    cmds:
+      - clang     -DLUA_USE_MACOSX -o build/lua-clang-raw onelua.c
+      - clang -Os -DLUA_USE_MACOSX -o build/lua-clang-Os  onelua.c
+      - clang -O2 -DLUA_USE_MACOSX -o build/lua-clang-O2  onelua.c
+      - clang -O3 -DLUA_USE_MACOSX -o build/lua-clang-O3  onelua.c
